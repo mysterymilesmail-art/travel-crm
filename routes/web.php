@@ -14,6 +14,10 @@ use App\Http\Controllers\DmcLeadController;
 use App\Http\Controllers\DmcCommentController;
 use App\Http\Controllers\AdminDmcLeadController;
 
+Route::get('/health-check', function() {
+    return 'Laravel is working!';
+});
+
 /*
 |--------------------------------------------------------------------------
 | AUTH ROUTES

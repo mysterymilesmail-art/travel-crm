@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('lead_payments', function (Blueprint $table) {
-Schema::create('lead_payments', function (Blueprint $table) {
     $table->id();
     $table->foreignId('lead_id')->constrained()->cascadeOnDelete();
     $table->decimal('amount', 10, 2);
@@ -22,7 +21,6 @@ Schema::create('lead_payments', function (Blueprint $table) {
     $table->foreignId('added_by')->constrained('users');
     $table->timestamps();
 });
-        });
     }
 
     /**
