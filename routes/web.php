@@ -40,8 +40,8 @@ Route::middleware(['auth', 'role:dmc'])->group(function () {
     Route::get('/dmc/leads/{lead}', [DmcLeadController::class, 'show'])
         ->name('dmc.leads.show');
 
-    Route::post('/leads/{lead}/dmc-comment', [DmcCommentController::class, 'store'])
-        ->name('dmc.comment.store');
+    // Route::post('/leads/{lead}/dmc-comment', [DmcCommentController::class, 'store'])
+    //     ->name('dmc.comment.store');
 });
 
 /*
@@ -80,6 +80,13 @@ Route::middleware(['auth', 'role:admin,agent'])->group(function () {
     Route::get('/admin/dmc-leads', [AdminDmcLeadController::class, 'index'])
         ->name('admin.dmc.leads');
 
-    Route::post('/leads/{lead}/dmc-comment', [DmcCommentController::class, 'store'])
-        ->name('dmc.comment.store');
+        // Route::post('/leads/{lead}/dmc-comment', [DmcCommentController::class, 'store'])
+        //     ->name('dmc.comment.store');
+});
+Route::middleware(['auth', 'role:admin,dmc'])->group(function () {
+
+    Route::post('/leads/{lead}/dmc-comment',
+        [DmcCommentController::class, 'store']
+    )->name('dmc.comment.store');
+
 });
