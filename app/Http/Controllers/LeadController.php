@@ -11,21 +11,82 @@ use Illuminate\Http\Request;
 
 class LeadController extends Controller
 {
-    public function index()
-    {
-        $query = Lead::with('assignedAgent');
+public function index(Request $request)
+{
+    $query = Lead::with('assignedAgent');
 
-        // Agent sees only own or assigned leads
-        if (auth()->user()->role === 'agent') {
-            $query->where(function ($q) {
-                $q->where('created_by', auth()->id())
-                  ->orWhere('assigned_to', auth()->id());
-            });
-        }
-
-        $leads = $query->latest()->paginate(15);
-        return view('leads.index', compact('leads'));
+    /* ================= ROLE BASED VISIBILITY ================= */
+    if (auth()->user()->role === 'agent') {
+        $query->where(function ($q) {
+            $q->where('created_by', auth()->id())
+              ->orWhere('assigned_to', auth()->id());
+        });
     }
+
+    /* ================= GLOBAL SEARCH ================= */
+    if ($request->filled('q')) {
+        $search = $request->q;
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('phone', 'like', "%{$search}%")
+              ->orWhere('whatsapp', 'like', "%{$search}%")
+              ->orWhere('destination', 'like', "%{$search}%")
+              ->orWhere('city', 'like', "%{$search}%")
+              ->orWhere('comment', 'like', "%{$search}%");
+        });
+    }
+
+    /* ================= FILTERS ================= */
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    if ($request->filled('destination')) {
+        $query->where('destination', 'like', "%{$request->destination}%");
+    }
+
+    if ($request->filled('travel_date')) {
+        $query->whereDate('travel_date', $request->travel_date);
+    }
+
+    if ($request->filled('enquiry_date')) {
+        $query->whereDate('enquiry_date', $request->enquiry_date);
+    }
+
+    if ($request->filled('follow_up_date')) {
+        $query->whereDate('follow_up_date', $request->follow_up_date);
+    }
+
+    if (
+        auth()->user()->role === 'admin' &&
+        $request->filled('assigned_to')
+    ) {
+        $query->where('assigned_to', $request->assigned_to);
+    }
+
+    /* ================= SORTING ================= */
+    $allowedSorts = ['travel_date', 'follow_up_date'];
+    $sortField = in_array($request->sort, $allowedSorts)
+        ? $request->sort
+        : 'created_at';
+
+    $sortOrder = $request->order === 'asc' ? 'asc' : 'desc';
+
+    $query->orderBy($sortField, $sortOrder);
+
+    $leads = $query
+        ->paginate(15)
+        ->withQueryString();
+
+    $agents = User::where('role', 'agent')->where('status', 1)->get();
+
+    return view('leads.index', compact(
+        'leads',
+        'agents',
+        'sortField',
+        'sortOrder'
+    ));
+}
 
 public function create()
 {

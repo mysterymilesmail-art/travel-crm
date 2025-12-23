@@ -6,16 +6,30 @@ use Illuminate\Http\Request;
 use App\Models\Lead;
 class DmcLeadController extends Controller
 {
-    public function index()
-    {
-        if (auth()->user()->role !== 'dmc') abort(403);
+public function index(Request $request)
+{
+    if (auth()->user()->role !== 'dmc') abort(403);
 
-        $leads = Lead::whereHas('dmcShares', function ($q) {
-            $q->where('dmc_id', auth()->id());
-        })->get();
+    $query = Lead::whereHas('dmcShares', function ($q) {
+        $q->where('dmc_id', auth()->id());
+    });
 
-        return view('dmc.leads.index', compact('leads'));
+    // 🔍 SEARCH FILTER
+    if ($request->filled('q')) {
+        $search = $request->q;
+        $query->where(function ($q) use ($search) {
+            $q->where('destination', 'like', "%{$search}%")
+              ->orWhere('city', 'like', "%{$search}%")
+              ->orWhere('comment', 'like', "%{$search}%")
+              ->orWhere('no_of_days', 'like', "%{$search}%")
+              ->orWhere('no_of_person', 'like', "%{$search}%");
+        });
     }
+
+    $leads = $query->latest()->paginate(15)->withQueryString();
+
+    return view('dmc.leads.index', compact('leads'));
+}
 
     public function show(Lead $lead)
     {
