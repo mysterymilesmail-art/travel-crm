@@ -83,10 +83,5 @@ Route::middleware(['auth', 'role:admin,agent'])->group(function () {
         // Route::post('/leads/{lead}/dmc-comment', [DmcCommentController::class, 'store'])
         //     ->name('dmc.comment.store');
 });
-Route::middleware(['auth', 'role:admin,dmc'])->group(function () {
 
-    Route::post('/leads/{lead}/dmc-comment',
-        [DmcCommentController::class, 'store']
-    )->name('dmc.comment.store');
-
-});
+Route::middleware('auth')->post('/leads/{lead}/dmc-comment',[DmcCommentController::class, 'store'])->name('dmc.comment.store');
